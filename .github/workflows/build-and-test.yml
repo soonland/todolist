@@ -21,4 +21,4 @@ jobs:
       run: xcodebuild build -scheme todolist -sdk iphonesimulator
     
     - name: Run Tests
-      run: xcodebuild test -scheme todolist -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=latest'
+      run: xcodebuild test -scheme todolist -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=latest' CODE_SIGNING_ALLOWED='NO'
