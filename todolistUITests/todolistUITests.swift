@@ -23,21 +23,47 @@ final class todolistUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testAddTask() throws {
         let app = XCUIApplication()
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        
+        // Test adding a task
+        let titleTextField = app.textFields["Titre de la tâche"]
+        XCTAssertTrue(titleTextField.exists)
+        titleTextField.tap()
+        titleTextField.typeText("Nouvelle tâche")
+        
+        let detailsTextField = app.textFields["Détails de la tâche"]
+        XCTAssertTrue(detailsTextField.exists)
+        detailsTextField.tap()
+        detailsTextField.typeText("Détails de la tâche")
+        
+        let addButton = app.buttons["Ajouter Tâche"]
+        XCTAssertTrue(addButton.exists)
+        addButton.tap()
+        
+        // Verify task appears in the list
+        let taskText = app.staticTexts["Nouvelle tâche"]
+        XCTAssertTrue(taskText.exists)
     }
-
+    
     @MainActor
-    func testLaunchPerformance() throws {
-        if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
-            // This measures how long it takes to launch your application.
-            measure(metrics: [XCTApplicationLaunchMetric()]) {
-                XCUIApplication().launch()
-            }
-        }
+    func testChangePriority() throws {
+        let app = XCUIApplication()
+        app.launch()
+        
+        // Select high priority
+        let highPriorityButton = app.buttons["Haute"]
+        XCTAssertTrue(highPriorityButton.exists)
+        highPriorityButton.tap()
+        
+        // Add task
+        app.textFields["Titre de la tâche"].tap()
+        app.textFields["Titre de la tâche"].typeText("Tâche prioritaire")
+        app.buttons["Ajouter Tâche"].tap()
+        
+        // Verify task exists
+        let taskText = app.staticTexts["Tâche prioritaire"]
+        XCTAssertTrue(taskText.exists)
     }
 }
