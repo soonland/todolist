@@ -1,0 +1,52 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode
+      run: sudo xcode-select -switch /Applications/Xcode_16.2.app/Contents/Developer
+    
+    - name: Build
+      run: xcodebuild build -scheme todolist -sdk iphonesimulator
+    
+    - name: Run Tests
+      run: xcodebuild test -scheme todolist -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=latest' CODE_SIGNING_ALLOWED='NO' -enableCodeCoverage YES -resultBundlePath TestResults.xcresult -verbose
+    
+    - name: Generate Coverage Report
+      run: |
+        # Afficher le rapport dans les logs
+        xcrun xccov view --report TestResults.xcresult
+        
+        # Générer le JSON pour le traitement
+        xcrun xccov view --report --json TestResults.xcresult > coverage.json
+        
+        # Créer un rapport HTML
+        echo "<html><head><style>
+          body { font-family: Arial, sans-serif; }
+          .file { margin: 10px 0; }
+          .coverage { color: #1a73e8; }
+          </style></head><body>" > coverage.html
+        echo "<h1>Code Coverage Report</h1>" >> coverage.html
+        jq -r '.targets[] | "<div class=\"file\">
+          <h3>" + .name + "</h3>
+          <p class=\"coverage\">Coverage: " + (.lineCoverage | floor | tostring) + "%</p>
+          <p>Files: " + (.files | length | tostring) + "</p>
+          </div>"' coverage.json >> coverage.html
+        echo "</body></html>" >> coverage.html
+    
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: code-coverage-report
+        path: coverage.html
