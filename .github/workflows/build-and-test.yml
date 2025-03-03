@@ -21,10 +21,20 @@ jobs:
       run: xcodebuild build -scheme todolist -sdk iphonesimulator
     
     - name: Run Tests
-      run: xcodebuild test -scheme todolist -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=latest' CODE_SIGNING_ALLOWED='NO' -enableCodeCoverage YES -resultBundlePath TestResults -verbose
+      run: xcodebuild test -scheme todolist -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro Max,OS=latest' CODE_SIGNING_ALLOWED='NO' -enableCodeCoverage YES -resultBundlePath TestResults.xcresult -verbose
     
-    - name: Upload Test Results
+    - name: Generate Coverage Report
+      run: |
+        xcrun xcresulttool get --format json --path TestResults.xcresult > coverage.json
+        echo "<html><body><pre>" > coverage.html
+        cat coverage.json | jq '.issues.coverage' >> coverage.html
+        echo "</pre></body></html>" >> coverage.html
+    
+    - name: Upload Coverage Reports
       uses: actions/upload-artifact@v4
       with:
         name: code-coverage-report
-        path: TestResults
+        path: |
+          TestResults.xcresult
+          coverage.json
+          coverage.html
