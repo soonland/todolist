@@ -1,0 +1,153 @@
+# Standards de Développement - Application TodoList
+
+## 1. Architecture et Organisation du Code
+
+### Structure MVVM
+- Models: Structures de données simples (Task, TaskStatus, TaskPriority)
+- Views: Composants d'interface utilisateur (ContentView)
+- ViewModels: Logique métier et état (TaskViewModel)
+
+### Hiérarchie des Fichiers
+```
+todolist/
+├── Models/
+│   └── Task.swift
+├── Views/
+│   └── ContentView.swift
+└── ViewModels/
+    └── TaskViewModel.swift
+```
+
+### Règles Générales
+- Un fichier par type majeur
+- Maximum 400 lignes par fichier
+- Séparer les fichiers par responsabilité
+
+## 2. Conventions de Code
+
+### Nommage
+- Types (PascalCase): `Task`, `TaskStatus`, `TaskPriority`
+- Variables/Méthodes (camelCase): `addTask()`, `updateTaskStatus()`
+- Propriétés publiées: préfixe explicite, ex: `@Published var tasks`
+
+### Documentation
+```swift
+/// Représente une tâche dans l'application
+/// - Parameters:
+///   - title: Le titre de la tâche
+///   - details: Les détails de la tâche
+///   - status: Le statut actuel de la tâche
+struct Task {
+    // ...
+}
+```
+
+### Méthodes
+- Maximum 20 lignes par méthode
+- Un seul niveau d'indentation si possible
+- Noms descriptifs et actions claires
+
+## 3. SwiftUI Best Practices
+
+### State Management
+- `@State` pour l'état local uniquement
+- `@StateObject` pour les ViewModels
+- `@Binding` pour les propriétés partagées
+- `@Published` pour les propriétés observables
+
+### Organisation des Vues
+- Extraire les sous-vues complexes
+- Utiliser des extensions pour les previews
+- Limiter la complexité des body
+
+### Exemple:
+```swift
+struct ContentView: View {
+    @StateObject private var viewModel = TaskViewModel()
+    
+    var body: some View {
+        TaskListView(tasks: $viewModel.tasks)
+    }
+}
+```
+
+## 4. Gestion des Données
+
+### Validation
+- Valider les entrées utilisateur
+- Définir des règles de validation claires
+```swift
+func validateTask(_ task: Task) -> Bool {
+    return !task.title.isEmpty && task.title.count <= 100
+}
+```
+
+### Persistence
+- Utiliser UserDefaults pour les données simples
+- Encoder/Decoder en JSON
+- Gérer les erreurs de persistence
+
+## 5. Tests
+
+### Tests Unitaires
+- Coverage minimum: 80%
+- Tester tous les ViewModels
+- Tester la validation des données
+
+### Tests UI
+- Tester les flux principaux
+- Vérifier les interactions utilisateur
+- Valider les mises à jour d'UI
+
+### Organisation
+```
+todolistTests/
+├── ViewModels/
+│   └── TaskViewModelTests.swift
+└── Models/
+    └── TaskTests.swift
+```
+
+## 6. Git
+
+### Branches
+- main: production
+- develop: développement
+- feature/xxx: nouvelles fonctionnalités
+- bugfix/xxx: corrections
+
+### Commits
+Format: `type(scope): description`
+Examples:
+- feat(task): ajouter la validation des titres
+- fix(ui): corriger l'affichage des priorités
+- docs(readme): mettre à jour l'installation
+
+### Reviews
+- Pull requests obligatoires
+- Au moins 1 reviewer
+- Tests passants requis
+
+## 7. Sécurité
+
+### Validation des Entrées
+- Nettoyer les entrées utilisateur
+- Valider les types et formats
+- Limiter les tailles des champs
+
+### Données Sensibles
+- Ne pas exposer d'identifiants
+- Nettoyer les logs
+- Utiliser le Keychain si nécessaire
+
+## 8. Performance
+
+### Optimisations
+- Minimiser les calculs dans les vues
+- Utiliser des ID stables pour les listes
+- Éviter les recalculs inutiles
+
+### Mémoire
+- Éviter les rétentions cycliques
+- Nettoyer les ressources
+- Utiliser weak/unowned appropriément

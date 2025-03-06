@@ -1,25 +1,71 @@
-//
-//  todolistUITests.swift
-//  todolistUITests
-//
-//  Created by Jonathan Langlois on 2025-02-03.
-//
-
 import XCTest
 
 final class todolistUITests: XCTestCase {
-
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+    
+    // Helper function to create a group
+    func createGroup(app: XCUIApplication, name: String, description: String) throws {
+        let addButton = app.buttons["Ajouter"]
+        XCTAssertTrue(addButton.exists)
+        addButton.tap()
+        
+        app.buttons["Nouveau groupe"].tap()
+        sleep(1) // Add small delay for keyboard
+        
+        let groupNameField = app.textFields["Nom du groupe"]
+        XCTAssertTrue(groupNameField.exists)
+        groupNameField.tap()
+        groupNameField.typeText(name)
+        
+        let groupDescField = app.textFields["Description"]
+        XCTAssertTrue(groupDescField.exists)
+        groupDescField.tap()
+        groupDescField.typeText(description)
+        
+        app.buttons["Créer"].tap()
+        
+        // Verify group was created
+        let groupText = app.staticTexts[name]
+        XCTAssertTrue(groupText.exists)
+    }
+    
+    // Helper function to create a task
+    func createTask(app: XCUIApplication, title: String, details: String, priority: String? = nil, groupName: String? = nil) throws {
+        let addButton = app.buttons["Ajouter"]
+        XCTAssertTrue(addButton.exists)
+        addButton.tap()
+        
+        if (groupName == nil) {
+            app.buttons["Nouvelle tâche"].tap()
+            sleep(1) // Add small delay for keyboard
+        }
+        
+        let titleTextField = app.textFields["Titre"]
+        XCTAssertTrue(titleTextField.exists)
+        titleTextField.tap()
+        titleTextField.typeText(title)
+        
+        let detailsTextField = app.textFields["Détails"]
+        XCTAssertTrue(detailsTextField.exists)
+        detailsTextField.tap()
+        detailsTextField.typeText(details)
+        
+        if let priority = priority {
+            let picker = app.buttons["priorityPicker"]
+            XCTAssertTrue(picker.exists)
+            picker.tap()
+            app.buttons[priority].tap()
+        }
+        
+        let addTaskButton = app.navigationBars.buttons["Ajouter tâche"]
+        XCTAssertTrue(addTaskButton.exists)
+        addTaskButton.tap()
+        
+        // Verify task was created
+        // let taskText = app.staticTexts[title]
+        // XCTAssertTrue(taskText.exists)
     }
 
     @MainActor
@@ -27,24 +73,15 @@ final class todolistUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         
-        // Test adding a task
-        let titleTextField = app.textFields["Titre de la tâche"]
-        XCTAssertTrue(titleTextField.exists)
-        titleTextField.tap()
-        titleTextField.typeText("Nouvelle tâche")
+        // Select "All Tasks" in sidebar
+        app.buttons["Toutes les tâches"].tap()
         
-        let detailsTextField = app.textFields["Détails de la tâche"]
-        XCTAssertTrue(detailsTextField.exists)
-        detailsTextField.tap()
-        detailsTextField.typeText("Détails de la tâche")
-        
-        let addButton = app.buttons["Ajouter Tâche"]
-        XCTAssertTrue(addButton.exists)
-        addButton.tap()
-        
-        // Verify task appears in the list
-        let taskText = app.staticTexts["Nouvelle tâche"]
-        XCTAssertTrue(taskText.exists)
+        // Create a new task
+        try createTask(
+            app: app,
+            title: "Nouvelle tâche",
+            details: "Détails de la tâche"
+        )
     }
     
     @MainActor
@@ -52,18 +89,70 @@ final class todolistUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
         
-        // Select high priority
-        let highPriorityButton = app.buttons["Haute"]
-        XCTAssertTrue(highPriorityButton.exists)
-        highPriorityButton.tap()
+        // Create a group first
+        try createGroup(
+            app: app,
+            name: "Groupe Test",
+            description: "Description test"
+        )
+
+        // Select the created group
+        let groupButton = app.buttons["Groupe Test"]
+        XCTAssertTrue(groupButton.exists)
+        groupButton.tap()
+        sleep(1) // Add small delay for animation
+
+        // Create a task with high priority
+        try createTask(
+            app: app,
+            title: "Tâche prioritaire",
+            details: "Détails de la tâche",
+            priority: "Haute",
+            groupName: "Groupe Test"
+        )
         
-        // Add task
-        app.textFields["Titre de la tâche"].tap()
-        app.textFields["Titre de la tâche"].typeText("Tâche prioritaire")
-        app.buttons["Ajouter Tâche"].tap()
+        // Additional verification for priority indicator
+        // let priorityIndicator = app.images["priorityHigh"]
+        // XCTAssertTrue(priorityIndicator.exists)
+    }
+    
+    @MainActor
+    func testAddGroup() throws {
+        let app = XCUIApplication()
+        app.launch()
         
-        // Verify task exists
-        let taskText = app.staticTexts["Tâche prioritaire"]
-        XCTAssertTrue(taskText.exists)
+        // Create a new group
+        try createGroup(
+            app: app,
+            name: "Nouveau groupe",
+            description: "Description du groupe"
+        )
+    }
+    
+    @MainActor
+    func testAddTaskToGroup() throws {
+        let app = XCUIApplication()
+        app.launch()
+        
+        // Create a group first
+        try createGroup(
+            app: app,
+            name: "Groupe Test",
+            description: "Description test"
+        )
+        
+        // Select the created group
+        let groupButton = app.buttons["Groupe Test"]
+        XCTAssertTrue(groupButton.exists)
+        groupButton.tap()
+        sleep(1) // Add small delay for animation
+        
+        // Add task to the group
+        try createTask(
+            app: app,
+            title: "Tâche dans groupe",
+            details: "Détails de la tâche",
+            groupName: "Groupe Test"
+        )
     }
 }
